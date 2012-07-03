@@ -42,7 +42,7 @@ end
 
 
 # let's grab a few hundred arbitrary linear models
-wrong_ones = 1000.times.collect {LinearModel.new(rand()*10-5.0,rand()*10-5.0)}
+wrong_ones = 1000.times.collect {LinearModel.new(rand()*200-100.0,rand()*200-100.0)}
 wrong_ones.each {|model| model.evaluate(@expected_values)}
 
 
