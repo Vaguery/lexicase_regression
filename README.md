@@ -10,4 +10,4 @@ Anyway, I wondered tonight whether using *lexicase selection* over the absolute 
 
 Yes.
 
-This is a quick sketch, for now. More in a few days.
+This is a quick sketch, for now. Full of repetition, especially as I modify the design spikes to look at a few variations on the original theme. I'll refactor them into a single library if that seems reasonable, and make the whole more usable. More in a few days.

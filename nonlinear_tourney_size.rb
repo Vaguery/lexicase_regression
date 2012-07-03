@@ -8,7 +8,7 @@ end
 puts "target data: #{@expected_values.inspect}\n\n"
 
 class LinearModel
-  attr_accessor :a,:b
+  attr_accessor :a,:b,:c,:d,:e
   attr_accessor :abs_errors
   
   def initialize(a,b)
@@ -58,11 +58,12 @@ end
 
 wrong_ones = 1000.times.collect {
   NonlinearModel.new(
-    rand()*200-100.0,
-    rand()*200-100.0,
+    rand()*10-5.0,
+    rand()*100-5.0,
     rand()*10-5.0,
     rand()*10-5.0,
     rand()*10-5.0)}
+
 wrong_ones.each {|model| model.evaluate(@expected_values)}
 
 
@@ -94,22 +95,23 @@ def lexicase_tournament_winner(tournament,objective_names, quantile=0.5)
 end
 
 
-# for a variety of different selection "pressures" (quantile kept at each x value)
+# for a variety of different tournament sizes (number of samples initially drawn before partitioning)
 # THIS WILL TAKE A WHILE!
-quantiles = [0.01,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.99]
-quantiles.each do |increment|
-  puts "quantile retained in each partition: #{increment}"
+samples = [2,4,8,16,32,64,128,250,500,1000]
+samples.each do |s|
+  puts "sample size of 1000 population: #{s}"
   10000.times do
-    picked_one = lexicase_tournament_winner(@results.keys,@expected_values.keys,increment)
-    @results[picked_one][:selections][increment] += 1
+    tourney = @results.keys.sample(s)
+    picked_one = lexicase_tournament_winner(tourney,@expected_values.keys,0.8)
+    @results[picked_one][:selections][s] += 1
   end
 end
 
-puts "\n\ntarget\n2.5,9.0,0.0,0.0,?\n\na,b,c,d,e,sse,sae,0.01,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.99"
+puts "\n\ntarget\n2.5,9.0,0.0,0.0,?\n\na,b,c,d,e,sse,sae,2,4,8,16,32,64,128,250,500,1000"
 output_line = ""
 @results.sort_by {|k,v| v[:sse]}.each do |key,value|
   output_line = "#{key.a},#{key.b},#{key.c},#{key.d},#{key.e},#{value[:sse]},#{value[:sae]}"
-  quantiles.each {|inc| output_line += ",#{value[:selections][inc]}"}
+  samples.each {|inc| output_line += ",#{value[:selections][inc]}"}
   puts "#{output_line}\n"
 end
 

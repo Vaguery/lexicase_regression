@@ -8,7 +8,7 @@ end
 puts "target data: #{@expected_values.inspect}\n\n"
 
 class LinearModel
-  attr_accessor :a,:b
+  attr_accessor :a,:b,:c,:d,:e
   attr_accessor :abs_errors
   
   def initialize(a,b)
@@ -63,6 +63,7 @@ wrong_ones = 1000.times.collect {
     rand()*10-5.0,
     rand()*10-5.0,
     rand()*10-5.0)}
+
 wrong_ones.each {|model| model.evaluate(@expected_values)}
 
 
@@ -81,35 +82,47 @@ end
 # for each objective in turn, discard all individuals with worse than median performance;
 # return a random one of those (assuming more than one might remain)
 
-def lexicase_tournament_winner(tournament,objective_names, quantile=0.5)
+@global_counter=0
+
+def lexicase_tournament_winner(tournament,objective_names, quantile=0.5,counter=@global_counter)
   objective_names.shuffle!
   tournament.shuffle!
+  counter = 0
   objective_names.each do |criterion|
     break if tournament.length <= 1
+    counter += 1
     extremes = tournament.collect {|dude| dude.abs_errors[criterion]}.minmax
     median = (extremes[1]-extremes[0])*quantile + extremes[0]
     tournament = tournament.find_all {|dude| dude.abs_errors[criterion] <= median}
   end
+  @global_counter += counter
   return tournament.sample
 end
 
 
-# for a variety of different selection "pressures" (quantile kept at each x value)
+# for a variety of different tournament sizes (number of samples initially drawn before partitioning)
 # THIS WILL TAKE A WHILE!
-quantiles = [0.01,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.99]
-quantiles.each do |increment|
-  puts "quantile retained in each partition: #{increment}"
+
+partition_counts = Hash.new(0)
+samples = [2,4,8,16,32,64,128,250,500,1000]
+samples.each do |s|
+  puts "sample size of 1000 population: #{s}"
+  @global_counter = 0
   10000.times do
-    picked_one = lexicase_tournament_winner(@results.keys,@expected_values.keys,increment)
-    @results[picked_one][:selections][increment] += 1
+    tourney = @results.keys.sample(s)
+    picked_one = lexicase_tournament_winner(tourney,@expected_values.keys,0.8)
+    @results[picked_one][:selections][s] += 1
   end
+  partition_counts[s] = @global_counter
 end
 
-puts "\n\ntarget\n2.5,9.0,0.0,0.0,?\n\na,b,c,d,e,sse,sae,0.01,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,0.99"
+puts "\n\n#{partition_counts.inspect}\n\n"
+
+puts "\n\ntarget\n2.5,9.0,0.0,0.0,?\n\na,b,sse,sae,2,4,8,16,32,64,128,250,500,1000"
 output_line = ""
 @results.sort_by {|k,v| v[:sse]}.each do |key,value|
-  output_line = "#{key.a},#{key.b},#{key.c},#{key.d},#{key.e},#{value[:sse]},#{value[:sae]}"
-  quantiles.each {|inc| output_line += ",#{value[:selections][inc]}"}
+  output_line = "#{key.a},#{key.b},#{value[:sse]},#{value[:sae]}"
+  samples.each {|inc| output_line += ",#{value[:selections][inc]}"}
   puts "#{output_line}\n"
 end
 
